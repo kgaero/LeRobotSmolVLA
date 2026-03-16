@@ -1,0 +1,24 @@
+.git/
+**/.git/
+.venv/
+**/.venv/
+__pycache__/
+*.py[cod]
+*.log
+*.mp4
+
+# Local artifacts and generated outputs
+libero_smolvla_eval/output/
+libero_smolvla_eval/output_live/
+libero_smolvla_eval/output_live_test/
+libero_smolvla_eval/output_live_robosuite_test/
+libero_smolvla_eval/output_live_robosuite_test2/
+libero_smolvla_eval/local_debs/
+libero_smolvla_eval/local_libs/
+libero_smolvla_eval/libero_datasets/
+
+# Large model weights
+libero_smolvla_eval/policies/**/model.safetensors
+
+# Local Hugging Face cache metadata
+libero_smolvla_eval/policies/**/.cache/

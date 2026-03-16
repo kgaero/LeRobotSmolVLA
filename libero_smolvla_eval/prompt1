@@ -1,0 +1,146 @@
+You are working on my desktop machine. Your goal is to get a working local setup that can:
+
+1) install LeRobot with LIBERO support,
+2) download an existing SmolVLA LIBERO policy from Hugging Face,
+3) run that policy on exactly one LIBERO task,
+4) visualize the rollout in interactive mode if supported on this machine,
+5) also save the rollout video to disk,
+6) verify the setup end-to-end.
+
+Important constraints:
+- DO NOT use Google Colab or Kaggle.
+- Prefer native Linux or WSL2 Ubuntu if available.
+- Prefer Python 3.11, not 3.12.
+- Do not guess commands blindly. Inspect local CLI help and installed package docs when needed.
+- Stop immediately on errors, explain the root cause, and fix them before moving on.
+- Be explicit about every file created and every command run.
+- At the end, leave me with one final command I can rerun myself.
+
+High-level context you should assume:
+- LeRobot official docs use LIBERO to evaluate SmolVLA.
+- LIBERO support is installed via: pip install -e ".[libero]"
+- A current known issue exists for lerobot[libero] on Python 3.12 around egl_probe / hf-egl-probe, so use Python 3.11.
+- Use the existing Hugging Face policy checkpoint: HuggingFaceVLA/smolvla_libero
+- Try one small LIBERO task first, such as suite libero_spatial with task id 0.
+
+What I want you to do, step by step:
+
+A. Inspect the machine first
+1. Detect OS, shell, Python versions, GPU presence, whether WSL2 is being used, and whether a display server is available.
+2. If this is Windows without WSL2/Linux support for MuJoCo/OpenGL rendering, tell me clearly and switch to the best supported local path available.
+3. Check whether interactive rendering is likely possible:
+   - On native Linux with GUI or WSLg, interactive mode may work.
+   - If no display is available, fall back to headless rendering + saved MP4 and clearly say so.
+
+B. Create a clean environment
+1. Create a fresh project directory, for example:
+   ~/robotics/libero_smolvla_eval
+2. Inside it, create a Python 3.11 virtual environment.
+3. Activate it.
+4. Print python --version and pip --version to confirm.
+5. If Python 3.11 is not installed, install it first using the most appropriate system method.
+6. Do NOT proceed with Python 3.12.
+
+C. Install system dependencies
+1. Install the minimum OS packages needed for:
+   - git
+   - ffmpeg
+   - build-essential
+   - cmake
+   - ninja-build
+   - libegl
+   - mesa/OpenGL libraries
+   - X11/GLFW-related runtime packages if needed by MuJoCo/robosuite
+2. Choose the package names appropriate for the detected distro.
+3. Explain why each important package is needed.
+
+D. Install LeRobot + LIBERO
+1. Clone the official Hugging Face LeRobot repo into the project directory.
+2. Enter the repo.
+3. Upgrade pip/setuptools/wheel.
+4. Install with:
+   pip install -e ".[libero]"
+5. If installation fails:
+   - capture the exact error,
+   - determine whether it is the known egl_probe / hf-egl-probe / Python 3.12 issue,
+   - fix the environment and retry.
+6. Do not paper over failures.
+
+E. Verify the install
+1. Confirm that the lerobot Python package imports successfully.
+2. Confirm that the evaluation module is importable, for example:
+   python -c "import lerobot; print('lerobot import ok')"
+3. Inspect local help for the evaluation entrypoint:
+   - try python -m lerobot.scripts.lerobot_eval --help
+   - if needed, inspect CLI/config names directly in the installed code
+4. Determine the exact currently supported flags for:
+   - policy path
+   - env type
+   - LIBERO task suite
+   - task ids
+   - batch size
+   - number of episodes
+   - output directory
+   - rendering / display / video options
+
+F. Download and run an existing SmolVLA policy
+1. Use the existing Hub policy:
+   HuggingFaceVLA/smolvla_libero
+2. Run the smallest meaningful evaluation first:
+   - one suite only
+   - one task id only
+   - one episode only
+   - batch size 1
+3. Prefer suite:
+   libero_spatial
+   and task id:
+   0
+4. If interactive rendering is supported on this machine:
+   - enable it
+   - make the viewer/window visible
+   - tell me exactly how you enabled it
+5. Regardless of interactive mode, also save the rollout as MP4 to an output directory such as:
+   ~/robotics/libero_smolvla_eval/output
+6. Use environment variables like MUJOCO_GL only if needed, and explain why.
+
+G. Validate outputs
+1. Verify that the evaluation finished successfully.
+2. Verify that at least one video file exists.
+3. Print the exact absolute path of the saved video.
+4. If interactive mode was not possible, explain exactly why:
+   - no GUI,
+   - WSL without WSLg,
+   - headless SSH,
+   - EGL-only environment,
+   etc.
+
+H. Leave behind reusable artifacts
+1. Create a shell script in the project directory named something like:
+   run_libero_smolvla.sh
+   that activates the venv and reruns the same evaluation.
+2. Create a README.txt in the project directory that contains:
+   - what was installed
+   - Python version used
+   - how to activate the environment
+   - the rerun command
+   - where videos are saved
+   - whether interactive rendering works on this machine
+3. At the end, print:
+   - the exact rerun command
+   - the exact output video path
+   - the exact environment activation command
+
+Important troubleshooting rules:
+- If Python 3.12 is active anywhere, do not continue until Python 3.11 is being used.
+- If pip install -e ".[libero]" fails, inspect the failure before trying random fixes.
+- If interactive rendering does not work, do not get stuck; switch to headless video output and complete the evaluation.
+- Prefer python -m lerobot.scripts.lerobot_eval over shell shims if that is more reliable locally.
+- Keep the first run minimal and fast: one task, one episode, one environment.
+- Do not train anything. Do not collect any data.
+
+Deliverables I expect from you:
+1. A working local install.
+2. One successful evaluation rollout on a LIBERO task.
+3. Interactive visualization if supported; otherwise a saved MP4 with a clear explanation.
+4. A rerunnable shell script.
+5. A concise final summary of exactly what worked and what did not.

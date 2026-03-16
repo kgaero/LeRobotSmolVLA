@@ -1,0 +1,3 @@
+[submodule "libero_smolvla_eval/lerobot"]
+	path = libero_smolvla_eval/lerobot
+	url = https://github.com/huggingface/lerobot.git
