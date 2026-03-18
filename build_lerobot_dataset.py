@@ -1232,8 +1232,8 @@ def push_dataset_to_hub(
     api = HfApi(token=token)
     LOGGER.info("Ensuring dataset repo exists on the Hub: %s", repo_id)
     api.create_repo(repo_id=repo_id, repo_type="dataset", private=private, exist_ok=True, token=token)
-    LOGGER.info("Uploading dataset folder to Hugging Face Hub from %s", output_root)
-    api.upload_folder(
+    LOGGER.info("Uploading dataset folder to Hugging Face Hub from %s using upload_large_folder", output_root)
+    api.upload_large_folder(
         repo_id=repo_id,
         repo_type="dataset",
         folder_path=str(output_root),

@@ -1,5 +1,8 @@
-HDF5 tree for /home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260318_052358/demo.hdf5
+HDF5 tree for /home/kgaer/robotics/libero_smolvla_eval/libero_task0_demos/libero_spatial_task0_20260318_093244/demo.hdf5
 [G] data
   [G] data/demo_1
-    [D] data/demo_1/actions shape=(4371, 7) dtype=float64
-    [D] data/demo_1/states shape=(4371, 92) dtype=float64
+    [D] data/demo_1/actions shape=(1600, 7) dtype=float64
+    [G] data/demo_1/obs
+      [D] data/demo_1/obs/image shape=(1600, 256, 256, 3) dtype=uint8
+      [D] data/demo_1/obs/wrist_image shape=(1600, 256, 256, 3) dtype=uint8
+    [D] data/demo_1/states shape=(1600, 92) dtype=float64

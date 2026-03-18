@@ -12,6 +12,7 @@ import h5py
 import mujoco
 import mujoco.viewer
 
+from libero_demo_hdf5_images import augment_demo_hdf5_with_images
 from libero.libero.benchmark import get_benchmark, get_benchmark_dict
 from libero.libero.envs.env_wrapper import ControlEnv
 from robosuite.devices import Keyboard
@@ -44,6 +45,12 @@ def parse_args():
     parser.add_argument("--output-dir", default="./libero_task0_demos", help="Base directory for saved demos.")
     parser.add_argument("--pos-sensitivity", type=float, default=1.0, help="Keyboard position sensitivity.")
     parser.add_argument("--rot-sensitivity", type=float, default=1.0, help="Keyboard rotation sensitivity.")
+    parser.add_argument("--image-size", type=int, default=256, help="Saved camera image size for dataset export.")
+    parser.add_argument(
+        "--exit-after-save",
+        action="store_true",
+        help="Exit immediately after a successful q-triggered save instead of resetting to the next initial state.",
+    )
     parser.add_argument("--auto-quit-seconds", type=float, default=0.0, help=argparse.SUPPRESS)
     return parser.parse_args()
 
@@ -74,6 +81,7 @@ def print_controls():
     print("Saving behavior:")
     print("  Successful episodes are compacted into demo.hdf5 whenever you reset with q.")
     print("  The same compaction runs once more on exit.")
+    print("  Use --exit-after-save to quit automatically after the first successful saved episode.")
     print("")
     print("Viewer:")
     print("  Native MuJoCo viewer window should open.")
@@ -99,17 +107,21 @@ def build_env_info(args, benchmark, task):
             "robot": args.robot,
             "controller": args.controller,
             "camera": args.camera,
+            "image_size": args.image_size,
         }
     )
 
 
-def compact_successes(raw_dir: Path, session_dir: Path, env_info: str) -> int:
+def compact_successes(raw_dir: Path, session_dir: Path, env_info: str, image_size: int) -> int:
     if not any(raw_dir.glob("ep_*/state_*.npz")):
         return 0
     gather_demonstrations_as_hdf5(str(raw_dir), str(session_dir), env_info)
     hdf5_path = session_dir / "demo.hdf5"
     if not hdf5_path.exists():
         return 0
+    augmented = augment_demo_hdf5_with_images(hdf5_path, env_info, image_size=image_size)
+    if augmented:
+        print(f"[images] added image observations to {augmented} demo(s)")
     with h5py.File(hdf5_path, "r") as f:
         return len(f["data"].keys())
 
@@ -190,6 +202,7 @@ def main():
 
     successful_printed = False
     save_count = 0
+    skip_final_compaction = False
 
     try:
         with mujoco.viewer.launch_passive(env.sim.model._model, env.sim.data._data) as viewer:
@@ -206,8 +219,12 @@ def main():
                 action, _ = input2action(device=device, robot=env.robots[0], active_arm="right", env_configuration=None)
 
                 if action is None:
-                    save_count = compact_successes(raw_dir, session_dir, env_info)
+                    save_count = compact_successes(raw_dir, session_dir, env_info, args.image_size)
                     print(f"[reset] successful demos saved so far: {save_count}")
+                    if args.exit_after_save and save_count > 0:
+                        print("[quit] exit-after-save requested; leaving after successful save")
+                        skip_final_compaction = True
+                        break
                     init_index += 1
                     reset_to_init_state(env, init_states, init_index)
                     successful_printed = False
@@ -228,8 +245,11 @@ def main():
         print("\n[quit] keyboard interrupt received, finalizing demo file...")
     finally:
         try:
-            save_count = compact_successes(raw_dir, session_dir, env_info)
-            print(f"[final] successful demos in {session_dir / 'demo.hdf5'}: {save_count}")
+            if skip_final_compaction:
+                print(f"[final] successful demos in {session_dir / 'demo.hdf5'}: {save_count}")
+            else:
+                save_count = compact_successes(raw_dir, session_dir, env_info, args.image_size)
+                print(f"[final] successful demos in {session_dir / 'demo.hdf5'}: {save_count}")
         finally:
             env.close()
 

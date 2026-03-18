@@ -22,3 +22,8 @@ libero_smolvla_eval/policies/**/model.safetensors
 
 # Local Hugging Face cache metadata
 libero_smolvla_eval/policies/**/.cache/
+
+# Large local dataset artifacts that exceed GitHub limits
+lerobot_dataset_out/data/chunk-000/file-000.parquet
+lerobot_dataset_out/episodes/episode_000000/obs_images/
+libero_smolvla_eval/libero_task0_demos/libero_spatial_task0_20260318_093244/demo.hdf5

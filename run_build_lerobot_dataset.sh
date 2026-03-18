@@ -3,11 +3,11 @@ set -euo pipefail
 
 PROJECT_DIR="$HOME/robotics"
 LIBERO_DIR="$PROJECT_DIR/libero_smolvla_eval"
-INPUT_DIR="$PROJECT_DIR/libero_task0_demos"
+INPUT_DIR="$LIBERO_DIR/libero_task0_demos"
 OUTPUT_DIR="$PROJECT_DIR/lerobot_dataset_out"
-TASK_NAME="${TASK_NAME:-saptial task 0}"
+TASK_NAME="${TASK_NAME:-spatial task 0}"
 ROBOT_NAME="${ROBOT_NAME:-Panda}"
-REPO_ID="${REPO_ID:-kgaero/libero-spatial-task0-test1}"
+REPO_ID="${REPO_ID:-kgaero/libero-spatial-task0-withImages}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 if [ -f "$LIBERO_DIR/.venv/bin/activate" ]; then

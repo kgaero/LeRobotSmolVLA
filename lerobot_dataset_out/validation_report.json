@@ -1,9 +1,9 @@
 {
-  "episode_count": 2,
+  "episode_count": 1,
   "action_shape": [
     7
   ],
-  "image_backed_episode_count": 0,
+  "image_backed_episode_count": 1,
   "native_backend_used": true,
   "native_backend_validated": true,
   "native_backend_validation_error": null

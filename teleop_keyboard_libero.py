@@ -12,6 +12,7 @@ from pathlib import Path
 import h5py
 import mujoco.viewer
 
+from libero_demo_hdf5_images import augment_demo_hdf5_with_images
 from libero.libero.benchmark import get_benchmark, get_benchmark_dict
 from libero.libero.envs.env_wrapper import ControlEnv
 from robosuite.devices import Keyboard
@@ -57,6 +58,7 @@ def parse_args():
     parser.add_argument("--rot-sensitivity", type=float, default=1.0)
     parser.add_argument("--viewer", choices=["auto", "robosuite", "mujoco"], default="auto")
     parser.add_argument("--output-dir", default="./libero_task0_demos")
+    parser.add_argument("--image-size", type=int, default=256)
     return parser.parse_args()
 
 
@@ -125,11 +127,12 @@ def build_env_info(args, benchmark, task):
             "controller": args.controller,
             "camera": args.camera,
             "viewer": args.viewer,
+            "image_size": args.image_size,
         }
     )
 
 
-def compact_successes(raw_dir: Path, session_dir: Path, env_info: str):
+def compact_successes(raw_dir: Path, session_dir: Path, env_info: str, image_size: int):
     state_files = list(raw_dir.glob("ep_*/state_*.npz"))
     hdf5_path = session_dir / "demo.hdf5"
     if not state_files:
@@ -137,6 +140,9 @@ def compact_successes(raw_dir: Path, session_dir: Path, env_info: str):
     gather_demonstrations_as_hdf5(str(raw_dir), str(session_dir), env_info)
     if not hdf5_path.exists():
         return hdf5_path, 0
+    augmented = augment_demo_hdf5_with_images(hdf5_path, env_info, image_size=image_size)
+    if augmented:
+        print(f"[images] added image observations to {augmented} demo(s)")
     with h5py.File(hdf5_path, "r") as f:
         return hdf5_path, len(f["data"].keys())
 
@@ -147,7 +153,7 @@ def finalize_current_episode(env):
         env.has_interaction = False
 
 
-def run_loop_with_robosuite_viewer(env, device, init_states, session_dir, env_info):
+def run_loop_with_robosuite_viewer(env, device, init_states, session_dir, env_info, image_size: int):
     reset_index = 0
     saved_count = 0
     success_latched = False
@@ -168,7 +174,7 @@ def run_loop_with_robosuite_viewer(env, device, init_states, session_dir, env_in
             )
             if action is None:
                 finalize_current_episode(env)
-                hdf5_path, new_count = compact_successes(Path(env.directory), session_dir, env_info)
+                hdf5_path, new_count = compact_successes(Path(env.directory), session_dir, env_info, image_size)
                 if new_count > saved_count:
                     print(f"[saved] saved successfully: {hdf5_path} demos={new_count}")
                 else:
@@ -184,7 +190,7 @@ def run_loop_with_robosuite_viewer(env, device, init_states, session_dir, env_in
                 success_latched = True
 
 
-def run_loop_with_mujoco_viewer(env, device, init_states, session_dir, env_info):
+def run_loop_with_mujoco_viewer(env, device, init_states, session_dir, env_info, image_size: int):
     reset_index = 0
     saved_count = 0
     success_latched = False
@@ -205,7 +211,7 @@ def run_loop_with_mujoco_viewer(env, device, init_states, session_dir, env_info)
             )
             if action is None:
                 finalize_current_episode(env)
-                hdf5_path, new_count = compact_successes(Path(env.directory), session_dir, env_info)
+                hdf5_path, new_count = compact_successes(Path(env.directory), session_dir, env_info, image_size)
                 if new_count > saved_count:
                     print(f"[saved] saved successfully: {hdf5_path} demos={new_count}")
                 else:
@@ -268,11 +274,11 @@ def main():
     )
     if args.viewer == "mujoco" or (args.viewer == "auto" and qxcb_missing()):
         env = DataCollectionWrapper(make_env(args, bddl_path, has_renderer=False), str(raw_dir))
-        run_loop_with_mujoco_viewer(env, device, init_states, session_dir, env_info)
+        run_loop_with_mujoco_viewer(env, device, init_states, session_dir, env_info, args.image_size)
         return 0
 
     env = DataCollectionWrapper(make_env(args, bddl_path, has_renderer=True), str(raw_dir))
-    run_loop_with_robosuite_viewer(env, device, init_states, session_dir, env_info)
+    run_loop_with_robosuite_viewer(env, device, init_states, session_dir, env_info, args.image_size)
     return 0
 
 

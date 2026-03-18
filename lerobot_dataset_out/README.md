@@ -6,20 +6,20 @@ configs:
     path: data/*/*.parquet
 ---
 
-# kgaero/libero-spatial-task0-test1
+# kgaero/libero-spatial-task0-withImages
 
 Generated from LIBERO / robosuite teleoperation HDF5 demos.
 
 ## Summary
 
-- Task: `saptial task 0`
+- Task: `spatial task 0`
 - Robot: `Panda`
-- Episodes: `2`
-- Total frames: `4826`
+- Episodes: `1`
+- Total frames: `1600`
 - FPS: `10`
 - Action shapes: `[[7]]`
-- Image keys: `[]`
-- Low-dimensional keys: `['states']`
+- Image keys: `['image', 'wrist_image']`
+- Low-dimensional keys: `[]`
 
 ## Files
 

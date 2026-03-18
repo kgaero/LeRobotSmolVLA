@@ -1,37 +1,32 @@
 {
-  "task_name": "saptial task 0",
+  "task_name": "spatial task 0",
   "robot_name": "Panda",
   "fps": 10,
   "dataset_root": "/home/kgaer/robotics/lerobot_dataset_out",
-  "episode_count": 2,
-  "total_frames": 4826,
+  "episode_count": 1,
+  "total_frames": 1600,
   "action_shapes": [
     [
       7
     ]
   ],
   "observation_keys_found": [
-    "states"
+    "image",
+    "wrist_image"
   ],
-  "image_keys_found": [],
-  "lowdim_keys_found": [
-    "states"
+  "image_keys_found": [
+    "image",
+    "wrist_image"
   ],
+  "lowdim_keys_found": [],
   "reward_availability": false,
   "done_availability": false,
-  "primary_image_keys": [],
+  "primary_image_keys": [
+    "image"
+  ],
   "files_processed": [
     {
-      "file_path": "/home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260316_184128/demo.hdf5",
-      "success": false,
-      "discovered_demo_groups": [],
-      "created_episode_ids": [],
-      "errors": [
-        "ValueError: No episode/demo groups discovered in file: /home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260316_184128/demo.hdf5"
-      ]
-    },
-    {
-      "file_path": "/home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260316_184618/demo.hdf5",
+      "file_path": "/home/kgaer/robotics/libero_smolvla_eval/libero_task0_demos/libero_spatial_task0_20260318_093244/demo.hdf5",
       "success": true,
       "discovered_demo_groups": [
         "/data/demo_1"
@@ -40,30 +35,23 @@
         0
       ],
       "errors": []
-    },
-    {
-      "file_path": "/home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260318_052358/demo.hdf5",
-      "success": true,
-      "discovered_demo_groups": [
-        "/data/demo_1"
-      ],
-      "created_episode_ids": [
-        1
-      ],
-      "errors": []
     }
   ],
   "native_backend": {
     "used": true,
     "reason": "Native LeRobot dataset written successfully.",
     "details": {
-      "repo_id": "kgaero/libero-spatial-task0-test1",
+      "repo_id": "kgaero/libero-spatial-task0-withImages",
       "features": [
         "action",
-        "observation.state"
+        "observation.images.image",
+        "observation.images.wrist_image"
       ],
-      "state_dim": 92,
-      "image_keys": []
+      "state_dim": 0,
+      "image_keys": [
+        "image",
+        "wrist_image"
+      ]
     }
   }
 }
