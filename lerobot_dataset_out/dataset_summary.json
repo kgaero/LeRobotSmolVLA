@@ -1,0 +1,44 @@
+{
+  "episode_count": 2,
+  "total_frames": 4826,
+  "fps": 10,
+  "robot_name": "Panda",
+  "task_name": "saptial task 0",
+  "action_shapes": [
+    [
+      7
+    ]
+  ],
+  "image_keys_found": [],
+  "lowdim_keys_found": [
+    "states"
+  ],
+  "per_episode": [
+    {
+      "episode_id": 0,
+      "length": 455,
+      "action_shape": [
+        455,
+        7
+      ],
+      "primary_image_key": null,
+      "image_keys": [],
+      "lowdim_keys": [
+        "states"
+      ]
+    },
+    {
+      "episode_id": 1,
+      "length": 4371,
+      "action_shape": [
+        4371,
+        7
+      ],
+      "primary_image_key": null,
+      "image_keys": [],
+      "lowdim_keys": [
+        "states"
+      ]
+    }
+  ]
+}

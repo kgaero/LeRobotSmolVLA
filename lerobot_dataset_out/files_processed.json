@@ -1,0 +1,35 @@
+{
+  "files": [
+    {
+      "file_path": "/home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260316_184128/demo.hdf5",
+      "success": false,
+      "discovered_demo_groups": [],
+      "created_episode_ids": [],
+      "errors": [
+        "ValueError: No episode/demo groups discovered in file: /home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260316_184128/demo.hdf5"
+      ]
+    },
+    {
+      "file_path": "/home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260316_184618/demo.hdf5",
+      "success": true,
+      "discovered_demo_groups": [
+        "/data/demo_1"
+      ],
+      "created_episode_ids": [
+        0
+      ],
+      "errors": []
+    },
+    {
+      "file_path": "/home/kgaer/robotics/libero_task0_demos/libero_spatial_task0_20260318_052358/demo.hdf5",
+      "success": true,
+      "discovered_demo_groups": [
+        "/data/demo_1"
+      ],
+      "created_episode_ids": [
+        1
+      ],
+      "errors": []
+    }
+  ]
+}

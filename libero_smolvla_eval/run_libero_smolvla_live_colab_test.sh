@@ -6,7 +6,7 @@ POLICY_DIR="$PROJECT_DIR/policies/smolvla-libero-colab-test"
 
 source "$PROJECT_DIR/.venv/bin/activate"
 
-export MUJOCO_GL=egl
+export MUJOCO_GL=glx
 export HF_HUB_DISABLE_TELEMETRY=1
 export LD_LIBRARY_PATH="$PROJECT_DIR/local_libs/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 
@@ -39,5 +39,6 @@ python -u "$PROJECT_DIR/live_libero_smolvla.py" \
   --task-id 0 \
   --device cuda \
   --n-action-steps 10 \
-  --viewer-backend matplotlib \
+  --viewer-backend mujoco \
+  --viewer-camera frontview \
   --output-dir "$PROJECT_DIR/output_live"

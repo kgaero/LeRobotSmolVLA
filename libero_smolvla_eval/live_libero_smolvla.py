@@ -5,14 +5,11 @@ import argparse
 import json
 import os
 import time
+from contextlib import AbstractContextManager
 from pathlib import Path
 
 import numpy as np
 import torch
-import matplotlib
-
-matplotlib.use("TkAgg", force=True)
-import matplotlib.pyplot as plt
 
 from lerobot.envs.configs import LiberoEnv as LiberoEnvConfig
 from lerobot.envs.factory import make_env_pre_post_processors
@@ -24,6 +21,12 @@ from lerobot.utils.io_utils import write_video
 
 class MatplotlibViewer:
     def __init__(self, title: str):
+        import matplotlib
+
+        matplotlib.use("TkAgg", force=True)
+        import matplotlib.pyplot as plt
+
+        self._plt = plt
         self.fig, self.ax = plt.subplots(num=title)
         self.ax.axis("off")
         self.image_artist = None
@@ -36,10 +39,48 @@ class MatplotlibViewer:
             self.image_artist.set_data(frame)
         self.fig.canvas.draw_idle()
         self.fig.canvas.flush_events()
-        plt.pause(0.001)
+        self._plt.pause(0.001)
 
     def close(self) -> None:
-        plt.close(self.fig)
+        self._plt.close(self.fig)
+
+
+class MujocoPassiveViewer(AbstractContextManager):
+    def __init__(self, control_env, camera_name: str = "frontview"):
+        import mujoco
+        import mujoco.viewer
+
+        self._mujoco = mujoco
+        self._camera_name = camera_name
+        self._ctx = mujoco.viewer.launch_passive(control_env.sim.model._model, control_env.sim.data._data)
+        self._viewer = self._ctx.__enter__()
+        self._apply_camera(control_env)
+        self.sync()
+
+    def _apply_camera(self, control_env) -> None:
+        if self._camera_name == "free":
+            self._viewer.cam.type = self._mujoco.mjtCamera.mjCAMERA_FREE
+            return
+        try:
+            camera_id = control_env.sim.model.camera_name2id(self._camera_name)
+        except Exception:
+            self._viewer.cam.type = self._mujoco.mjtCamera.mjCAMERA_FREE
+            return
+        self._viewer.cam.type = self._mujoco.mjtCamera.mjCAMERA_FIXED
+        self._viewer.cam.fixedcamid = camera_id
+
+    def is_running(self) -> bool:
+        return self._viewer.is_running()
+
+    def sync(self) -> None:
+        self._viewer.sync()
+
+    def close(self) -> None:
+        self._ctx.__exit__(None, None, None)
+
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
+        return False
 
 
 def add_batch_dim_to_observation(observation):
@@ -72,6 +113,13 @@ def load_policy_rename_map(policy_path: Path) -> dict[str, str]:
         rename_map["observation.images.image2"] = rename_map["observation.images.wrist_image"]
 
     return rename_map
+
+
+def get_control_env(env):
+    control_env = getattr(env, "_env", None)
+    if control_env is None or not hasattr(control_env, "sim"):
+        raise RuntimeError("Expected a LIBERO ControlEnv with a MuJoCo sim for on-screen viewing.")
+    return control_env
 
 
 def main() -> None:
@@ -113,10 +161,15 @@ def main() -> None:
     )
     parser.add_argument(
         "--viewer-backend",
-        choices=("robosuite", "matplotlib"),
+        choices=("robosuite", "matplotlib", "mujoco"),
         default="robosuite",
-        help="Live viewer backend. 'robosuite' uses the native on-screen MuJoCo viewer. "
-        "'matplotlib' is a fallback that displays offscreen frames.",
+        help="Live viewer backend. 'robosuite' uses LIBERO's on-screen renderer, "
+        "'mujoco' uses the native MuJoCo passive viewer, and 'matplotlib' displays offscreen frames.",
+    )
+    parser.add_argument(
+        "--viewer-camera",
+        default="frontview",
+        help="Camera name for the native MuJoCo viewer backend, or 'free'.",
     )
     parser.add_argument(
         "--step-delay",
@@ -131,7 +184,7 @@ def main() -> None:
     video_path = output_dir / f"{args.suite}_{args.task_id}_live.mp4"
     summary_path = output_dir / f"{args.suite}_{args.task_id}_live.json"
 
-    if args.viewer_backend == "robosuite":
+    if args.viewer_backend in {"robosuite", "mujoco"}:
         # robosuite forces EGL when GPU rendering is enabled unless MUJOCO_GL is already glx or osmesa.
         # On WSLg, glx keeps the on-screen GLFW viewer path active.
         os.environ.setdefault("MUJOCO_GL", "glx")
@@ -163,6 +216,7 @@ def main() -> None:
             env.reset()
             return env
 
+    class RobosuiteOnScreenLiberoEnv(OnScreenLiberoEnv):
         def render(self):
             # Trigger robosuite's OpenCV window, then return the same frame used for MP4 export.
             self._env.env.render()
@@ -205,7 +259,11 @@ def main() -> None:
 
     suite = _get_suite(args.suite)
     print(f"Loaded LIBERO suite {args.suite} task_id={args.task_id}", flush=True)
-    env_cls = OnScreenLiberoEnv if args.viewer_backend == "robosuite" else BaseLiberoEnv
+    env_cls = BaseLiberoEnv
+    if args.viewer_backend == "robosuite":
+        env_cls = RobosuiteOnScreenLiberoEnv
+    elif args.viewer_backend == "mujoco":
+        env_cls = OnScreenLiberoEnv
     env = env_cls(
         task_suite=suite,
         task_id=args.task_id,
@@ -239,12 +297,15 @@ def main() -> None:
         viewer = MatplotlibViewer(f"LeRobot LIBERO Live: {args.suite} task {args.task_id}")
         viewer.show(first_frame)
         print("Matplotlib live viewer opened", flush=True)
+    elif args.viewer_backend == "mujoco":
+        viewer = MujocoPassiveViewer(get_control_env(env), camera_name=args.viewer_camera)
+        print("Native MuJoCo viewer opened", flush=True)
     else:
         print("robosuite on-screen viewer enabled", flush=True)
     frames.append(first_frame)
 
     with torch.inference_mode():
-        while steps < max_steps:
+        while steps < max_steps and (viewer is None or not hasattr(viewer, "is_running") or viewer.is_running()):
             observation = preprocess_observation(add_batch_dim_to_observation(obs))
             observation["task"] = [env.task_description]
             observation = env_preprocessor(observation)
@@ -261,7 +322,10 @@ def main() -> None:
 
             frame = env.render()
             if viewer is not None:
-                viewer.show(frame)
+                if hasattr(viewer, "show"):
+                    viewer.show(frame)
+                if hasattr(viewer, "sync"):
+                    viewer.sync()
             frames.append(frame)
 
             if info.get("is_success", False):
