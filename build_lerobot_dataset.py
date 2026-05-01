@@ -26,7 +26,7 @@ from typing import Any
 import numpy as np
 
 # Hardcode a temporary token here for first-pass testing, then delete it later.
-HF_TOKEN = ""
+HF_TOKEN = "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"
 
 LOGGER = logging.getLogger("build_lerobot_dataset")
 
