@@ -2,28 +2,48 @@
 **/.git/
 .venv/
 **/.venv/
+venv/
+env/
 __pycache__/
-*.py[cod]
+**/__pycache__/
+*.py[codz]
+*$py.class
 *.log
 *.mp4
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+build/
+dist/
+*.egg-info/
+
+# Local dependency/vendor bundles
+.local_qt_libs/
+.local_libs_deb/
+libero_smolvla_eval/local_debs/
+libero_smolvla_eval/local_libs/
 
 # Local artifacts and generated outputs
+output/
+native_debug_out/
+native_trace_out/
+lerobot_dataset_out/
+libero_task0_demos/
+libero_smolvla_eval/libero_task0_demos/
 libero_smolvla_eval/output/
 libero_smolvla_eval/output_live/
 libero_smolvla_eval/output_live_test/
 libero_smolvla_eval/output_live_robosuite_test/
 libero_smolvla_eval/output_live_robosuite_test2/
-libero_smolvla_eval/local_debs/
-libero_smolvla_eval/local_libs/
 libero_smolvla_eval/libero_datasets/
 
 # Large model weights
-libero_smolvla_eval/policies/**/model.safetensors
+libero_smolvla_eval/policies/**/*.safetensors
 
 # Local Hugging Face cache metadata
 libero_smolvla_eval/policies/**/.cache/
-
-# Large local dataset artifacts that exceed GitHub limits
-lerobot_dataset_out/data/chunk-000/file-000.parquet
-lerobot_dataset_out/episodes/episode_000000/obs_images/
-libero_smolvla_eval/libero_task0_demos/libero_spatial_task0_20260318_093244/demo.hdf5
+**/.cache/huggingface/
